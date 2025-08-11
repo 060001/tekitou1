@@ -1,468 +1,412 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Valorant Picker</title>
-  <style>
-    :root {
-      --bg: linear-gradient(135deg,#0a1324,#1b3154);
-      --txt: #f8f9ff;
-      --sub: #b1b8d8;
-      --acc1: #ff3b5c;
-      --acc2: #ec5f5f;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: Inter, system-ui, Arial;
-      color: var(--txt);
-    }
-    .drag-bg {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      -webkit-app-region: drag;
-      z-index: 0;
-    }
-    .ui {
-      position: relative;
-      z-index: 1;
-      width: 90vw;
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      -webkit-app-region: drag !important;
-    }
-    .btn,
-    .dropdown-list,
-    .option,
-    .modal,
-    .modal-card,
-    .copy-btn,
-    .close-btn,
-    .close-window-btn,
-    .status,
-    [role="button"],
-    select, input, textarea,
-    .minimize-btn,
-    .close-window-btn {
-      -webkit-app-region: no-drag !important;
-    }
-    h1 {
-      text-align: center;
-      font-size: 18px;
-    }
-    .select-wrap {
-      position: relative;
-      background: rgba(255,255,255,0.06);
-      padding: 8px;
-      border-radius: 8px;
-    }
-    .select-wrap::after {
-      content: "▼";
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-    .dropdown-selected {
-      cursor: pointer;
-    }
-    .dropdown-list {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: #1d2a48;
-      border-radius: 8px;
-      max-height: 180px;
-      overflow: auto;
-      display: none;
-      z-index: 2;
-      -webkit-app-region: no-drag;
-    }
-    .option {
-      padding: 8px 10px;
-      cursor: pointer;
-    }
-    .option:hover {
-      background: linear-gradient(90deg, var(--acc1), var(--acc2));
-      color: #fff;
-    }
-    .btn {
-      padding: 10px;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      background: linear-gradient(135deg, var(--acc1), var(--acc2));
-      color: #fff;
-      -webkit-app-region: no-drag;
-    }
-    .btn.secondary {
-      background: #4caf50;
-    }
-    .minimize-btn{
-      pointer-events:auto !important;
-      cursor:pointer;
-      z-index:30;
-    }
-    .close-window-btn{
-      pointer-events:auto !important;
-      cursor:pointer;
-      z-index:30;
-    }
-    .btn.gray {
-      background: #6b7280;
-    }
-    .status {
-      text-align: center;
-      color: var(--sub);
-      font-size: 14px;
-      -webkit-app-region: no-drag;
-    }
-    #state-log { display:none; }
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 3;
-      -webkit-app-region: no-drag;
-    }
-    .modal-card {
-      width: calc(100vw - 40px);
-      max-width: 700px;
-      max-height: calc(100vh - 40px);
-      overflow: auto;
-      background: #0f1724;
-      border-radius: 8px;
-      padding: 16px;
-      color: #fff;
-      -webkit-app-region: no-drag;
-    }
-    .player-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      gap: 8px;
-    }
-    .player-info {
-      display: grid;
-      grid-template-columns: 160px 1fr 120px 80px 80px 60px 60px;
-      gap: 8px;
-      width: 100%;
-      align-items: center;
-      font-size: 13px;
-      color: #cbd5e1;
-    }
-    .badge {
-      background: rgba(255,255,255,0.06);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 13px;
-      color: #f8f9ff;
-    }
-    .copy-btn, .close-btn {
-      padding: 6px 8px;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      cursor: pointer;
-      -webkit-app-region: no-drag;
-    }
-    .copy-btn {
-      background: #2b6cb0;
-    }
-    .close-btn {
-      background: #e53e3e;
-      margin-top: 12px;
-    }
-    .col-head { font-weight:700; color:#e6eef8; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Valorant Picker</title>
+<style>
+:root{
+  --bg:linear-gradient(135deg,#0a1324,#1b3154);
+  --txt:#f8f9ff;
+  --sub:#b1b8d8;
+  --acc1:#ff3b5c;
+  --acc2:#ec5f5f;
+  --card-bg:#0f1724;
+  --row-border:rgba(255,255,255,0.06);
+  --attacker:#ff4b5c;
+  --defender:#4ba3ff;
+  --attacker-bg:linear-gradient(90deg, rgba(255,75,92,0.08), rgba(255,75,92,0.03));
+  --defender-bg:linear-gradient(90deg, rgba(75,163,255,0.08), rgba(75,163,255,0.03));
+  --copy-success:#22c55e;
+  --muted:rgba(255,255,255,0.06);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color:var(--txt);background:var(--bg)}
+.pywebview-drag-region{ -webkit-app-region: drag; }
+.nodrag{ -webkit-app-region: no-drag !important; }
+.container{position:relative;z-index:1;width:92vw;max-width:980px;margin:0 auto;padding:12px 18px 28px 18px;display:flex;flex-direction:column;gap:12px;min-height:100vh}
+.title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 4px}
+.brand{font-weight:800;font-size:20px;letter-spacing:1px;display:flex;align-items:center;gap:10px}
+.tabbar{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.tab{padding:8px 14px;border-radius:10px;background:transparent;border:1px solid transparent;color:var(--txt);cursor:pointer;font-weight:700}
+.tab.active{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06)}
+.window-controls{display:flex;gap:8px;align-items:center}
+.win-btn{width:36px;height:36px;border-radius:8px;border:none;background:transparent;color:var(--txt);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.win-btn:hover{background:rgba(255,255,255,0.03)}
+.card{background:var(--card-bg);border-radius:12px;padding:14px;border:1px solid var(--muted);display:flex;flex-direction:column;gap:12px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.select-wrap{position:relative;background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;min-width:160px}
+.select-wrap::after{content:"▼";position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+.dropdown-selected{cursor:pointer;user-select:none}
+.dropdown-list{position:absolute;top:100%;left:0;right:0;background:#10203a;border-radius:8px;max-height:220px;overflow:auto;display:none;z-index:20;padding:6px}
+.option{padding:8px 10px;cursor:pointer;border-radius:6px}
+.option:hover{background:linear-gradient(90deg,var(--acc1),var(--acc2));color:#fff}
+.btn{padding:10px 14px;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff;display:inline-flex;align-items:center;gap:8px}
+.btn.secondary{background:#4caf50}
+.btn.ghost{background:transparent;border:1px solid var(--muted);color:var(--txt)}
+.status{ text-align:center;color:var(--sub);font-size:14px }
+.state-log{font-size:12px;line-height:1.3;max-height:120px;overflow-y:auto;color:#cbd5e1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.01)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.modal-card{width:calc(100% - 40px);max-width:1300px;max-height:calc(100vh - 80px);overflow:auto;background:var(--card-bg);border-radius:10px;padding:16px;color:#fff;box-sizing:border-box;border:1px solid var(--muted)}
+.section-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border-radius:8px;font-weight:700}
+.section{display:flex;flex-direction:column;gap:8px}
+.section.attacker .section-header{background:var(--attacker-bg);border:1px solid rgba(255,75,92,0.12)}
+.section.defender .section-header{background:var(--defender-bg);border:1px solid rgba(75,163,255,0.12)}
+.table-wrap{overflow:auto;max-height:62vh;padding-right:8px}
+.players-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;color:#cbd5e1;min-width:900px}
+.players-table thead th{color:#e6eef8;text-align:left;padding:10px 8px;font-weight:700;border-bottom:1px solid var(--row-border);position:sticky;top:0;background:transparent}
+.players-table tbody td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copy-btn{background:#2b6cb0;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background-color 0.15s ease,color 0.15s ease}
+.copy-btn.copy-success{background:var(--copy-success);color:#062017}
+.small{font-size:12px;color:var(--sub)}
+.connect-overlay{position:fixed;inset:0;background:rgba(6,12,20,0.85);display:flex;align-items:center;justify-content:center;z-index:70;flex-direction:column;gap:10px;padding:24px;box-sizing:border-box}
+.connect-overlay.hidden{display:none}
+.loader{width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,0.08);border-top-color:#66b3ff;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.connect-text{color:#e6eef8;font-size:16px;text-align:center}
+.connect-sub{color:#bfcde3;font-size:13px;text-align:center;opacity:0.95}
+.connect-restart{color:#d1dbe8;font-size:13px;text-align:center;opacity:0.9;margin-top:6px}
+.footer-note{font-size:13px;color:var(--sub);text-align:center}
+@media (max-width:920px){.players-table{min-width:760px}}
+</style>
 </head>
 <body>
-<button id="closeBtnFixed" class="close-window-btn" title="ウィンドウを閉じる" onclick="tryClose(event)"
-        style="position:fixed;top:4px;right:4px;width:28px;height:28px;
-               background:transparent;border:none;padding:0;border-radius:6px;
-               -webkit-app-region:no-drag;z-index:40;">
-  <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
-    <line x1="6" y1="6" x2="16" y2="16" stroke="#e8f8ff" stroke-width="2" stroke-linecap="round"/>
-    <line x1="16" y1="6" x2="6" y2="16" stroke="#e8f8ff" stroke-width="2" stroke-linecap="round"/>
-  </svg>
-</button>
-<button id="minimizeBtnFixed" class="minimize-btn" title="ウィンドウを最小化" onclick="tryMinimize(event)"
-        style="position:fixed;top:4px;right:36px;width:28px;height:28px;
-               background:transparent;border:none;padding:0;border-radius:6px;
-               -webkit-app-region:no-drag;z-index:40;">
-  <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="11" width="12" height="2" rx="1" fill="#e8f8ff" />
-  </svg>
-</button>
-  <div class="drag-bg pywebview-drag-region"></div>
-  <div class="ui">
-    <h1 style="position:relative;">
-      Valorant Picker
-    </h1>
-    <div><label>Agent</label><div class="select-wrap"><div id="agent-dropdown"></div></div></div>
-    <div style="display: flex; gap: 8px;">
-      <button id="startBtn" class="btn">Start</button>
+<div class="pywebview-drag-region" style="position:fixed;inset:0;z-index:0"></div>
+<div class="container">
+  <div class="title-row pywebview-drag-region">
+    <div class="brand">Valorant Picker</div>
+    <div class="window-controls nodrag">
+      <button id="minimizeBtn" class="win-btn nodrag" title="最小化" aria-label="最小化">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="11" width="18" height="2" rx="1" fill="#e8f8ff"/></svg>
+      </button>
+      <button id="closeBtn" class="win-btn nodrag" title="閉じる" aria-label="閉じる">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="6" y1="6" x2="18" y2="18" stroke="#e8f8ff" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="#e8f8ff" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
-    <div style="display: flex; gap: 8px;">
-      <button id="dodgeBtn" class="btn">Dodge Match</button>
-      <button id="playerBtn" class="btn secondary">All Player info</button>
-   </div>
-   <div id="status" class="status"></div>
-   <div id="state-log" style="font-size:12px;line-height:1.3;max-height:120px;overflow-y:auto;color:#cbd5e1;"></div>
   </div>
+
+  <div class="tabbar" id="top-tabbar" role="tablist" aria-label="Main tabs">
+    <button id="tab-picker" class="tab active" role="tab" aria-selected="true">picker</button>
+    <button id="tab-info" class="tab" role="tab" aria-selected="false">info</button>
+  </div>
+
+  <div id="picker-view" class="card">
+    <div class="controls">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:220px">
+        <label style="font-weight:700">Agent</label>
+        <div class="select-wrap"><div id="agent-dropdown"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="startBtn" class="btn nodrag" disabled>Start</button>
+        <button id="dodgeBtn" class="btn ghost nodrag" disabled>Dodge</button>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="state-log" id="state-log" aria-live="polite"></div>
+    <div class="footer-note" id="footer-note">valorantを起動してない場合は起動してください。</div>
+  </div>
+
+  <div id="info-view" class="card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="font-weight:800">All Player info</div>
+      <div style="display:flex;gap:8px">
+        <button id="playerBtn" class="btn secondary nodrag" disabled>All Player info</button>
+      </div>
+    </div>
+    <div class="small" id="info-help">プレイヤー情報の取得には時間がかかります。取得中は「取得中...」になります。</div>
+    <div style="margin-top:8px">
+      <div class="state-log" id="info-state-log" aria-live="polite"></div>
+    </div>
+  </div>
+
   <div id="modal" class="modal">
     <div class="modal-card" id="modal-card"></div>
   </div>
-  <script>
-  const statusEl = document.getElementById('status');
-  const startBtn = document.getElementById('startBtn');
-  const dodgeBtn = document.getElementById('dodgeBtn');
-  const playerBtn = document.getElementById('playerBtn');
-  const modal = document.getElementById('modal');
-  const stateLog = document.getElementById('state-log');
-  let agents = [];
-  let selectedAgentIdx = 0;
-  let isRunning = false;
-  let stateLogList = [];
-  let stateIntervalId = null
-  const ORIGINAL_WIDTH = 420;
-  const ORIGINAL_HEIGHT = 640;
-  const EXPAND_WIDTH = 900;
-  async function tryMinimize(ev){
-    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
-    let ok = false;
-    try{ ok = await ensureApi(); }catch(_){}
-    try{
-      if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.minimize_window === 'function'){
-        await window.pywebview.api.minimize_window();
-        return;
-      }
-      if(window.pywebview && window.pywebview.window && typeof window.pywebview.window.minimize === 'function'){
-        window.pywebview.window.minimize();
-        return;
-      }
-    }catch(err){
-      console.error('minimize error:',err);
-    }
-    if(window.close){ window.close(); }
-  }
-  async function tryClose(ev){
-    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
-    let ok = false;
-    try{ ok = await ensureApi(); }catch(_){}
-    try{
-      if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.close_window === 'function'){
-        await window.pywebview.api.close_window();
-        return;
-      }
-      if(window.pywebview && window.pywebview.window && typeof window.pywebview.window.close === 'function'){
-        window.pywebview.window.close();
-        return;
-      }
-    }catch(err){
-      console.error('close error:',err);
-    }
-    if(window.close){ window.close(); }
-  }
-  function appendLog(msg) {
-    const ts = new Date().toLocaleTimeString();
-    stateLogList.push(`[${ts}] ${msg}`);
-    if(stateLogList.length > 40) stateLogList = stateLogList.slice(-40);
-    stateLog.innerHTML = stateLogList.map(x=>x.replace(/</g,"<")).join('<br>');
-  }
-  async function fetchAndLogState() {
-    const ok = await ensureApi();
-    if(ok && window.pywebview && window.pywebview.api){
-      try {
-        if(window.pywebview.api.fetchSessionState){
-          const st = await window.pywebview.api.fetchSessionState();
-          appendLog("State: " + st);
-        }
-        if(window.pywebview.api.get_status){
-          const txt = await window.pywebview.api.get_status();
-          if(typeof txt === "string") setStatus(txt);
-        }
-      } catch(e) {
-        appendLog("State取得失敗: " + (e && e.message || e));
-      }
-    } else {
-      appendLog("State取得不可(API未接続)");
-    }
-  }
-  function setStatus(m){ statusEl.textContent = m || ''; }
-  async function ensureApi(timeout = 3000){
-    if(window.pywebview && window.pywebview.api) return true;
-    return new Promise(resolve => {
-      let done = false;
-      function onReady(){ if(done) return; done = true; resolve(true); }
-      window.addEventListener('pywebviewready', onReady, {once:true});
-      setTimeout(()=>{ if(!done) resolve(false); }, timeout);
-    });
-  }
-async function loadAgents(){
-  let list = [];
+</div>
+
+<div id="connect-overlay" class="connect-overlay">
+  <div class="loader"></div>
+  <div class="connect-text" id="connect-text">valorantに接続しています</div>
+  <div class="connect-sub" id="connect-sub">valorantを起動してない場合は起動してください。</div>
+  <div class="connect-restart" id="connect-restart">valorantを起動してるのに接続されない場合はvalorantを再起動してください</div>
+</div>
+
+<script>
+const statusEl=document.getElementById('status')
+const startBtn=document.getElementById('startBtn')
+const dodgeBtn=document.getElementById('dodgeBtn')
+const playerBtn=document.getElementById('playerBtn')
+const modal=document.getElementById('modal')
+const overlay=document.getElementById('connect-overlay')
+const connectTextEl=document.getElementById('connect-text')
+const connectSubEl=document.getElementById('connect-sub')
+const connectRestartEl=document.getElementById('connect-restart')
+const footerNoteEl=document.getElementById('footer-note')
+const minimizeBtn=document.getElementById('minimizeBtn')
+const closeBtn=document.getElementById('closeBtn')
+const stateLogEl=document.getElementById('state-log')
+const infoStateLogEl=document.getElementById('info-state-log')
+let agents=[]
+let selectedAgentIdx=0
+let isRunning=false
+let stateIntervalId=null
+const ORIGINAL_WIDTH=420
+const ORIGINAL_HEIGHT=640
+let connectionStatus='connecting'
+
+function setStatus(m){statusEl.textContent=m||''}
+function appendLog(msg){
+  const ts=new Date().toLocaleTimeString()
+  const line=document.createElement('div')
+  line.textContent=`[${ts}] ${msg}`
+  stateLogEl.appendChild(line)
+  infoStateLogEl.appendChild(line.cloneNode(true))
+  while(stateLogEl.children.length>200) stateLogEl.removeChild(stateLogEl.firstChild)
+  while(infoStateLogEl.children.length>200) infoStateLogEl.removeChild(infoStateLogEl.firstChild)
+  stateLogEl.scrollTop = stateLogEl.scrollHeight
+  infoStateLogEl.scrollTop = infoStateLogEl.scrollHeight
+}
+
+async function ensureApi(timeout=3000){
+  if(window.pywebview&&window.pywebview.api) return true
+  return new Promise(resolve=>{
+    let done=false
+    function onReady(){if(done) return; done=true; resolve(true)}
+    window.addEventListener('pywebviewready', onReady, {once:true})
+    setTimeout(()=>{if(!done) resolve(false)}, timeout)
+  })
+}
+minimizeBtn.addEventListener('click', async (ev)=>{
+  ev.stopPropagation()
+  const ok = await ensureApi()
   try{
-    const res = await fetch('https://valorant-api.com/v1/agents?isPlayableCharacter=true');
-    if(res.ok){ const j = await res.json(); list = j.data.filter(a=>a.isPlayableCharacter); }
+    if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.minimize_window === 'function'){
+      await window.pywebview.api.minimize_window()
+      return
+    }
+    if(window.pywebview && window.pywebview.window && typeof window.pywebview.window.minimize === 'function'){
+      window.pywebview.window.minimize()
+      return
+    }
+    if(window.minimize) window.minimize()
   }catch(e){}
-  if(!list.length) list = [{uuid:'',displayName:'Jett'},{uuid:'',displayName:'Reyna'},{uuid:'',displayName:'Raze'}];
-  agents = list;
-  renderAgentDropdown();
+})
+closeBtn.addEventListener('click', async (ev)=>{
+  ev.stopPropagation()
+  const ok = await ensureApi()
+  try{
+    if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.close_window === 'function'){
+      await window.pywebview.api.close_window()
+      return
+    }
+    if(window.pywebview && window.pywebview.window && typeof window.pywebview.window.close === 'function'){
+      window.pywebview.window.close()
+      return
+    }
+    if(window.close) window.close()
+  }catch(e){}
+})
+async function loadAgents(){
+  let list=[]
+  try{const res=await fetch('https://valorant-api.com/v1/agents?isPlayableCharacter=true');if(res.ok){const j=await res.json();list=j.data.filter(a=>a.isPlayableCharacter)}}catch(e){}
+  if(!list.length) list=[{uuid:'',displayName:'Jett'},{uuid:'',displayName:'Reyna'},{uuid:'',displayName:'Raze'}]
+  agents=list; renderAgentDropdown()
 }
 function renderAgentDropdown(){
-  const wrap = document.getElementById('agent-dropdown');
-  wrap.innerHTML = '';
-  const sel = document.createElement('div'); sel.className='dropdown-selected'; sel.textContent = agents[selectedAgentIdx]?.displayName || '';
-  sel.onclick = (e)=>{ e.stopPropagation(); toggleList('agent'); };
-  wrap.appendChild(sel);
-  const list = document.createElement('div'); list.className='dropdown-list';
-  agents.forEach((a,i)=>{
-    const it = document.createElement('div'); it.className='option'+(i===selectedAgentIdx?' selected':''); it.textContent = a.displayName;
-    it.onclick = (e)=>{ selectAgent(i); closeList('agent'); };
-    list.appendChild(it);
-  });
-  wrap.appendChild(list);
+  const wrap=document.getElementById('agent-dropdown'); wrap.innerHTML=''
+  const sel=document.createElement('div'); sel.className='dropdown-selected'; sel.textContent=agents[selectedAgentIdx]?.displayName||''
+  sel.onclick=e=>{e.stopPropagation(); toggleList('agent')}
+  wrap.appendChild(sel)
+  const list=document.createElement('div'); list.className='dropdown-list'
+  agents.forEach((a,i)=>{const it=document.createElement('div'); it.className='option'+(i===selectedAgentIdx?' selected':''); it.textContent=a.displayName; it.onclick=e=>{selectAgent(i); closeList('agent')}; list.appendChild(it)})
+  wrap.appendChild(list)
 }
-function toggleList(type){
-  const wrap = document.getElementById(type+'-dropdown');
-  const list = wrap.querySelector('.dropdown-list');
-  const open = list.style.display === 'block';
-  document.querySelectorAll('.dropdown-list').forEach(el=>el.style.display='none');
-  if(!open){ list.style.display = 'block'; setTimeout(()=>{ document.addEventListener('click', function cb(e){ if(!wrap.contains(e.target)){ closeList(type); document.removeEventListener('click', cb); } }, {once:true}); }, 0); }
-}
-function closeList(type){ const wrap = document.getElementById(type+'-dropdown'); const list = wrap.querySelector('.dropdown-list'); if(list) list.style.display = 'none'; }
-async function selectAgent(i){
-  selectedAgentIdx = i;
-  renderAgentDropdown();
-  const ag = agents[selectedAgentIdx] || {};
-  const uuid = ag.uuid || ag.displayName || '';
-  const ok = await ensureApi();
-  if(ok && window.pywebview && window.pywebview.api && window.pywebview.api.set_last_agent){
-    try{ await window.pywebview.api.set_last_agent(uuid); }catch(e){}
-  }
-}
+function toggleList(type){const wrap=document.getElementById(type+'-dropdown'); const list=wrap.querySelector('.dropdown-list'); const open=list.style.display==='block'; document.querySelectorAll('.dropdown-list').forEach(el=>el.style.display='none'); if(!open){list.style.display='block'; setTimeout(()=>{document.addEventListener('click', function cb(e){ if(!wrap.contains(e.target)){ closeList(type); document.removeEventListener('click', cb) } }, {once:true})},0)}}
+function closeList(type){const wrap=document.getElementById(type+'-dropdown'); const list=wrap.querySelector('.dropdown-list'); if(list) list.style.display='none'}
+async function selectAgent(i){selectedAgentIdx=i; renderAgentDropdown(); const ag=agents[selectedAgentIdx]||{}; const uuid=ag.uuid||ag.displayName||''; const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.set_last_agent){try{await window.pywebview.api.set_last_agent(uuid)}catch(e){} } }
+
 startBtn.addEventListener('click', async ()=>{
-  await fetchAndLogState();
-  const ok = await ensureApi();
-  if(!ok){ setStatus('API未接続'); return; }
-  const rc = '';
-  const ag = agents[selectedAgentIdx] || {};
-  const agent = ag.uuid || ag.displayName || '';
-  if(!agent){ setStatus('エージェント未選択'); return; }
-  if(!isRunning){
-    await window.pywebview.api.set_last_agent(agent);
-    const resp = await window.pywebview.api.start(rc, agent);
-    setStatus(await window.pywebview.api.get_status());
-    startBtn.textContent = 'Stop';
-    isRunning = true;
-    if(stateIntervalId) clearInterval(stateIntervalId);
-    stateIntervalId = setInterval(fetchAndLogState, 1000);
-  } else {
-    const resp = await window.pywebview.api.stop();
-    setStatus(await window.pywebview.api.get_status());
-    startBtn.textContent = 'Start';
-    isRunning = false;
-    if(stateIntervalId) clearInterval(stateIntervalId);
-    stateIntervalId = null;
-  }
-});
-dodgeBtn.addEventListener('click', async ()=>{
-  await fetchAndLogState();
-  const ok = await ensureApi();
-  if(!ok){ setStatus('API未接続'); return; }
-  const resp = await window.pywebview.api.dodge();
-  setStatus(await window.pywebview.api.get_status());
-});
+  const ok=await ensureApi(); if(!ok){ setStatus('API未接続'); appendLog('API未接続'); return }
+  const ag=agents[selectedAgentIdx]||{}; const agent=ag.uuid||ag.displayName||''
+  if(!agent){ setStatus('エージェント未選択'); appendLog('エージェント未選択'); return }
+  if(!isRunning){ await window.pywebview.api.set_last_agent(agent); await window.pywebview.api.start('', agent); setStatus(await window.pywebview.api.get_status()); appendLog('Start 実行'); startBtn.textContent='Stop'; isRunning=true; stateIntervalId=setInterval(()=>{ if(window.pywebview&&window.pywebview.api&&window.pywebview.api.get_status) window.pywebview.api.get_status().then(s=>setStatus(s)).catch(()=>{}) },1000) }
+  else{ await window.pywebview.api.stop(); setStatus(await window.pywebview.api.get_status()); appendLog('Stop 実行'); startBtn.textContent='Start'; isRunning=false; if(stateIntervalId) clearInterval(stateIntervalId); stateIntervalId=null }
+})
+dodgeBtn.addEventListener('click', async ()=>{ const ok=await ensureApi(); if(!ok){ setStatus('API未接続'); appendLog('API未接続'); return } appendLog('Dodge 実行'); await window.pywebview.api.dodge(); setStatus(await window.pywebview.api.get_status()) })
+
 playerBtn.addEventListener('click', async ()=>{
-  await fetchAndLogState();
-  const ok = await ensureApi();
-  if(!ok){ setStatus('API未接続'); return; }
-  const players = await window.pywebview.api.get_all_players_rank();
-  if(!players || !players.length){ setStatus('プレイヤーが見つかりません'); return; }
-  await showPlayersModal(players);
-});
-async function showPlayersModal(players){
-  modal.innerHTML = '';
-  modal.style.display = 'flex';
+  appendLog('プレイヤー情報取得開始')
+  setStatus('取得中...')
+  appendLog('取得中...')
   try{
-    const ok = await ensureApi();
-    if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.resize_window === 'function'){
-      await window.pywebview.api.resize_window(EXPAND_WIDTH, ORIGINAL_HEIGHT);
+    const ok=await ensureApi()
+    if(!ok){ setStatus('API未接続'); appendLog('API未接続'); return }
+    const players = await window.pywebview.api.get_all_players_rank()
+    if(!players || !players.length){
+      setStatus('マッチに入っていません')
+      appendLog('マッチに入っていません')
+      return
     }
-  }catch(e){}
-  const card = document.createElement('div'); card.className = 'modal-card';
-  const title = document.createElement('h2'); title.textContent = 'All Player info'; title.style.marginBottom = '8px';
-  card.appendChild(title);
-  const header = document.createElement('div'); header.className='player-row';
-  const headerInfo = document.createElement('div'); headerInfo.className='player-info';
-  headerInfo.innerHTML = `<div class="col-head">Side / Agent</div><div class="col-head">Name</div><div class="col-head">Rank (RR)</div><div class="col-head">Peak</div><div class="col-head">WR (TG)</div><div class="col-head">KD</div><div class="col-head">HS%</div>`;
-  header.appendChild(headerInfo);
-  card.appendChild(header);
-  players.forEach(p=>{
-    const row = document.createElement('div'); row.className = 'player-row';
-    const info = document.createElement('div'); info.className = 'player-info';
-    const sideAgent = `${p.side || 'Unknown'} ${p.agent || 'Unknown'}`;
-    const name = p.name || p.subject || 'Unknown';
-    const rank_rr = `${p.rank || 'N/a'}(${p.rr || 0})`;
-    const peak = p.peakrank || 'N/a';
-    const wr = (p.wr !== undefined && p.totalGames !== undefined) ? `${p.wr}(${p.totalGames})` : (p.wr || 'N/a');
-    const kd = p.kd !== undefined ? p.kd : 'N/a';
-    const hs = p.hs !== undefined ? p.hs : 'N/a';
-    info.innerHTML = `<div class="badge">${sideAgent}</div><div style="font-weight:600">${name}</div><div>${rank_rr}</div><div>${peak}</div><div>${wr}</div><div>${kd}</div><div>${hs}</div>`;
-    const copy = document.createElement('button'); copy.className = 'copy-btn'; copy.textContent = 'Copy';
-    copy.onclick = ()=>{ navigator.clipboard.writeText((p.name||p.subject)||''); setStatus('Copied'); };
-    row.appendChild(info); row.appendChild(copy);
-    card.appendChild(row);
-  });
-  const close = document.createElement('button'); close.className = 'close-btn'; close.textContent = 'Close';
-  close.onclick = async ()=>{ try{ const ok = await ensureApi(); if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.resize_window === 'function'){ await window.pywebview.api.resize_window(ORIGINAL_WIDTH, ORIGINAL_HEIGHT); } }catch(e){}; modal.style.display = 'none'; modal.innerHTML = ''; setStatus(''); };
-  card.appendChild(close);
-  modal.appendChild(card);
-}
-document.addEventListener('DOMContentLoaded', async ()=>{
-  await loadAgents();
-  let ok = await ensureApi();
-  if(ok && window.pywebview && window.pywebview.api && window.pywebview.api.connect_auto_region){
-    try {
-      const result = await window.pywebview.api.connect_auto_region();
-      appendLog("自動接続: " + result);
-    } catch(e) {
-      appendLog("自動接続失敗: " + (e && e.message || e));
-    }
-  } else {
-    appendLog("自動接続APIが利用できません");
+    appendLog(`取得完了: ${players.length} 人`)
+    setStatus('取得完了')
+    await showPlayersModal(players)
+  }catch(err){
+    setStatus('取得失敗')
+    appendLog('取得失敗: ' + (err && err.message || String(err)))
   }
-  ok = await ensureApi();
-  if(ok && window.pywebview && window.pywebview.api && window.pywebview.api.get_last_agent){
+})
+
+function createCopyButton(textToCopy){
+  const btn=document.createElement('button')
+  btn.className='copy-btn nodrag'
+  btn.type='button'
+  btn.textContent='Copy'
+  btn.addEventListener('click', async ()=>{
     try{
-      const saved = await window.pywebview.api.get_last_agent();
-      if(saved){
-        const idx = agents.findIndex(a => (a.uuid === saved) || ((a.displayName||'').toLowerCase() === (saved||'').toLowerCase()));
-        if(idx >= 0) selectedAgentIdx = idx;
-      }
-    }catch(e){}
+      await navigator.clipboard.writeText(textToCopy||'')
+      const origText = btn.textContent
+      btn.textContent='User name copied!'
+      btn.classList.add('copy-success')
+      setTimeout(()=>{ btn.classList.remove('copy-success'); btn.textContent=origText },2000)
+      setStatus('Copied')
+      appendLog('ユーザー名をコピーしました')
+    }catch(e){
+      setStatus('Copy failed')
+      appendLog('コピー失敗')
+    }
+  })
+  return btn
+}
+async function showSection(title, side, items){
+  const container=document.createElement('div')
+  container.className='section '+(side==='Attacker'?'attacker':'defender')
+  const header=document.createElement('div'); header.className='section-header'
+  const left=document.createElement('div'); left.textContent=title
+  const right=document.createElement('div'); right.textContent=items.length+'人'; right.className='small'
+  header.appendChild(left); header.appendChild(right)
+  container.appendChild(header)
+  const wrap=document.createElement('div'); wrap.className='table-wrap'
+  const table=document.createElement('table'); table.className='players-table'
+  const colgroup=document.createElement('colgroup')
+  const widths=[160,320,80,70,70,70,70,70,70]
+  widths.forEach(w=>{ const c=document.createElement('col'); c.style.width=w+'px'; colgroup.appendChild(c) })
+  const copyCol=document.createElement('col'); colgroup.appendChild(copyCol)
+  table.appendChild(colgroup)
+  const thead=document.createElement('thead'); const thr=document.createElement('tr')
+  const headers=['キャラ名','ユーザー名','ランク','RR','Peak','WR','TG','KD','HS%','']
+  headers.forEach(h=>{ const th=document.createElement('th'); th.textContent=h; thr.appendChild(th) })
+  thead.appendChild(thr); table.appendChild(thead)
+  const tbody=document.createElement('tbody')
+  items.forEach(p=>{
+    const tr=document.createElement('tr')
+    const tdAgent=document.createElement('td'); tdAgent.textContent = p.agent || 'Unknown'; tr.appendChild(tdAgent)
+    const tdName=document.createElement('td'); tdName.textContent = p.name || p.subject || 'Unknown'; tdName.title = tdName.textContent; tr.appendChild(tdName)
+    const tdRank=document.createElement('td'); tdRank.textContent = p.rank||'N/a'; tr.appendChild(tdRank)
+    const tdRR=document.createElement('td'); tdRR.textContent = (p.rr!==undefined?String(p.rr):'0'); tr.appendChild(tdRR)
+    const tdPeak=document.createElement('td'); tdPeak.textContent = p.peakrank||'N/a'; tr.appendChild(tdPeak)
+    const tdWR=document.createElement('td'); tdWR.textContent = (p.wr!==undefined?String(p.wr):'N/a'); tr.appendChild(tdWR)
+    const tdTG=document.createElement('td'); tdTG.textContent = (p.totalGames!==undefined?String(p.totalGames):'N/a'); tr.appendChild(tdTG)
+    const tdKd=document.createElement('td'); tdKd.textContent = (p.kd!==undefined?String(p.kd):'N/a'); tr.appendChild(tdKd)
+    const tdHs=document.createElement('td'); tdHs.textContent = (p.hs!==undefined?String(p.hs):'N/a'); tr.appendChild(tdHs)
+    const tdCopy=document.createElement('td'); const btn=createCopyButton(p.name||p.subject||''); tdCopy.appendChild(btn); tr.appendChild(tdCopy)
+    tbody.appendChild(tr)
+  })
+  table.appendChild(tbody)
+  wrap.appendChild(table)
+  container.appendChild(wrap)
+  return container
+}
+async function showPlayersModal(players){
+  modal.style.display='flex'
+  const card=document.createElement('div'); card.className='modal-card'
+  const title=document.createElement('div'); title.style.fontWeight='800'; title.style.marginBottom='12px'; title.textContent='All Player info'; card.appendChild(title)
+  const defenders = players.filter(p=>p.side==='Defender')
+  const attackers = players.filter(p=>p.side==='Attacker')
+  const secDef = await showSection('Defender','Defender',defenders)
+  const secAtk = await showSection('Attacker','Attacker',attackers)
+  card.appendChild(secDef)
+  card.appendChild(secAtk)
+  const close=document.createElement('button'); close.className='copy-btn nodrag'; close.textContent='Close'
+  close.onclick=async ()=>{
+    try{ const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) await window.pywebview.api.resize_window(ORIGINAL_WIDTH,ORIGINAL_HEIGHT) }catch(e){}
+    modal.style.display='none'; modal.innerHTML=''; setStatus('') }
+  card.appendChild(close)
+  document.getElementById('modal-card').innerHTML=''
+  document.getElementById('modal-card').appendChild(card)
+  const totalWidth = 160+320+80+70+70+70+70+70+70 + 140
+  const newWidth = Math.min(Math.max(totalWidth, ORIGINAL_WIDTH), 1400)
+  try{ const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) await window.pywebview.api.resize_window(newWidth, Math.min(ORIGINAL_HEIGHT, Math.max(480, ORIGINAL_HEIGHT))) }catch(e){}
+}
+
+function setConnectionStatus(status){
+  connectionStatus=status
+  if(status==='connecting'){
+    footerNoteEl.style.display='block'
+    connectSubEl.style.display='block'
+    connectRestartEl.style.display='block'
+    overlay.classList.remove('hidden')
+  } else if(status==='connected'){
+    footerNoteEl.style.display='none'
+    connectSubEl.style.display='none'
+    connectRestartEl.style.display='none'
+    overlay.classList.add('hidden')
+  } else {
+    footerNoteEl.style.display='block'
+    connectSubEl.style.display='block'
+    connectRestartEl.style.display='block'
+    overlay.classList.remove('hidden')
   }
-  renderAgentDropdown();
-  document.getElementById('closeBtnFixed')?.addEventListener('click', tryClose);
-  document.getElementById('minimizeBtnFixed')?.addEventListener('click', tryMinimize);
-});
-window.addEventListener('pywebviewready', async ()=>{ if(!agents.length) await loadAgents(); });
+}
+async function startupConnectLoop(){
+  setConnectionStatus('connecting')
+  await loadAgents()
+  let ok=false
+  let tries=0
+  while(!ok){
+    tries++
+    try{
+      const apiReady = await ensureApi()
+      if(!apiReady){ await new Promise(r=>setTimeout(r,1000)); continue }
+      const res = await window.pywebview.api.connect_auto_region()
+      setStatus(res)
+      appendLog('自動接続: ' + res)
+      if(typeof res==='string' && res.includes('Connected')){
+        setStatus('成功')
+        connectTextEl.textContent='成功'
+        setConnectionStatus('connected')
+        await new Promise(r=>setTimeout(r,800))
+        ok=true
+        break
+      } else {
+        connectTextEl.textContent='valorantに接続しています'
+        setConnectionStatus('connecting')
+      }
+    }catch(e){
+      setConnectionStatus('connecting')
+    }
+    await new Promise(r=>setTimeout(r,1500))
+    if(tries>60) tries=0
+  }
+  try{ const ok2=await ensureApi(); if(ok2&&window.pywebview&&window.pywebview.api&&window.pywebview.api.get_last_agent){ const saved=await window.pywebview.api.get_last_agent(); if(saved){ const idx=agents.findIndex(a=>(a.uuid===saved)||((a.displayName||'').toLowerCase()===(saved||'').toLowerCase())); if(idx>=0) selectedAgentIdx=idx } } }catch(e){}
+  renderAgentDropdown()
+  startBtn.disabled=false
+  dodgeBtn.disabled=false
+  playerBtn.disabled=false
+}
+document.getElementById('tab-picker').addEventListener('click', ()=>{
+  document.getElementById('tab-picker').classList.add('active'); document.getElementById('tab-picker').setAttribute('aria-selected','true')
+  document.getElementById('tab-info').classList.remove('active'); document.getElementById('tab-info').setAttribute('aria-selected','false')
+  document.getElementById('picker-view').style.display='block'; document.getElementById('info-view').style.display='none'
+})
+document.getElementById('tab-info').addEventListener('click', ()=>{
+  document.getElementById('tab-info').classList.add('active'); document.getElementById('tab-info').setAttribute('aria-selected','true')
+  document.getElementById('tab-picker').classList.remove('active'); document.getElementById('tab-picker').setAttribute('aria-selected','false')
+  document.getElementById('picker-view').style.display='none'; document.getElementById('info-view').style.display='block'
+})
+document.addEventListener('DOMContentLoaded', async ()=>{
+  startupConnectLoop()
+})
+window.addEventListener('pywebviewready', async ()=>{ if(!agents.length) await loadAgents() })
 </script>
 </body>
 </html>
