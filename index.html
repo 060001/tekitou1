@@ -1,0 +1,468 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Valorant Picker</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg,#0a1324,#1b3154);
+      --txt: #f8f9ff;
+      --sub: #b1b8d8;
+      --acc1: #ff3b5c;
+      --acc2: #ec5f5f;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Inter, system-ui, Arial;
+      color: var(--txt);
+    }
+    .drag-bg {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      -webkit-app-region: drag;
+      z-index: 0;
+    }
+    .ui {
+      position: relative;
+      z-index: 1;
+      width: 90vw;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-app-region: drag !important;
+    }
+    .btn,
+    .dropdown-list,
+    .option,
+    .modal,
+    .modal-card,
+    .copy-btn,
+    .close-btn,
+    .close-window-btn,
+    .status,
+    [role="button"],
+    select, input, textarea,
+    .minimize-btn,
+    .close-window-btn {
+      -webkit-app-region: no-drag !important;
+    }
+    h1 {
+      text-align: center;
+      font-size: 18px;
+    }
+    .select-wrap {
+      position: relative;
+      background: rgba(255,255,255,0.06);
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .select-wrap::after {
+      content: "▼";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .dropdown-selected {
+      cursor: pointer;
+    }
+    .dropdown-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #1d2a48;
+      border-radius: 8px;
+      max-height: 180px;
+      overflow: auto;
+      display: none;
+      z-index: 2;
+      -webkit-app-region: no-drag;
+    }
+    .option {
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .option:hover {
+      background: linear-gradient(90deg, var(--acc1), var(--acc2));
+      color: #fff;
+    }
+    .btn {
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--acc1), var(--acc2));
+      color: #fff;
+      -webkit-app-region: no-drag;
+    }
+    .btn.secondary {
+      background: #4caf50;
+    }
+    .minimize-btn{
+      pointer-events:auto !important;
+      cursor:pointer;
+      z-index:30;
+    }
+    .close-window-btn{
+      pointer-events:auto !important;
+      cursor:pointer;
+      z-index:30;
+    }
+    .btn.gray {
+      background: #6b7280;
+    }
+    .status {
+      text-align: center;
+      color: var(--sub);
+      font-size: 14px;
+      -webkit-app-region: no-drag;
+    }
+    #state-log { display:none; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      -webkit-app-region: no-drag;
+    }
+    .modal-card {
+      width: calc(100vw - 40px);
+      max-width: 700px;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      background: #0f1724;
+      border-radius: 8px;
+      padding: 16px;
+      color: #fff;
+      -webkit-app-region: no-drag;
+    }
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      gap: 8px;
+    }
+    .player-info {
+      display: grid;
+      grid-template-columns: 160px 1fr 120px 80px 80px 60px 60px;
+      gap: 8px;
+      width: 100%;
+      align-items: center;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .badge {
+      background: rgba(255,255,255,0.06);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #f8f9ff;
+    }
+    .copy-btn, .close-btn {
+      padding: 6px 8px;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .copy-btn {
+      background: #2b6cb0;
+    }
+    .close-btn {
+      background: #e53e3e;
+      margin-top: 12px;
+    }
+    .col-head { font-weight:700; color:#e6eef8; }
+  </style>
+</head>
+<body>
+<button id="closeBtnFixed" class="close-window-btn" title="ウィンドウを閉じる" onclick="tryClose(event)"
+        style="position:fixed;top:4px;right:4px;width:28px;height:28px;
+               background:transparent;border:none;padding:0;border-radius:6px;
+               -webkit-app-region:no-drag;z-index:40;">
+  <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+    <line x1="6" y1="6" x2="16" y2="16" stroke="#e8f8ff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="16" y1="6" x2="6" y2="16" stroke="#e8f8ff" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+</button>
+<button id="minimizeBtnFixed" class="minimize-btn" title="ウィンドウを最小化" onclick="tryMinimize(event)"
+        style="position:fixed;top:4px;right:36px;width:28px;height:28px;
+               background:transparent;border:none;padding:0;border-radius:6px;
+               -webkit-app-region:no-drag;z-index:40;">
+  <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="11" width="12" height="2" rx="1" fill="#e8f8ff" />
+  </svg>
+</button>
+  <div class="drag-bg pywebview-drag-region"></div>
+  <div class="ui">
+    <h1 style="position:relative;">
+      Valorant Picker
+    </h1>
+    <div><label>Agent</label><div class="select-wrap"><div id="agent-dropdown"></div></div></div>
+    <div style="display: flex; gap: 8px;">
+      <button id="startBtn" class="btn">Start</button>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button id="dodgeBtn" class="btn">Dodge Match</button>
+      <button id="playerBtn" class="btn secondary">All Player info</button>
+   </div>
+   <div id="status" class="status"></div>
+   <div id="state-log" style="font-size:12px;line-height:1.3;max-height:120px;overflow-y:auto;color:#cbd5e1;"></div>
+  </div>
+  <div id="modal" class="modal">
+    <div class="modal-card" id="modal-card"></div>
+  </div>
+  <script>
+  const statusEl = document.getElementById('status');
+  const startBtn = document.getElementById('startBtn');
+  const dodgeBtn = document.getElementById('dodgeBtn');
+  const playerBtn = document.getElementById('playerBtn');
+  const modal = document.getElementById('modal');
+  const stateLog = document.getElementById('state-log');
+  let agents = [];
+  let selectedAgentIdx = 0;
+  let isRunning = false;
+  let stateLogList = [];
+  let stateIntervalId = null
+  const ORIGINAL_WIDTH = 420;
+  const ORIGINAL_HEIGHT = 640;
+  const EXPAND_WIDTH = 900;
+  async function tryMinimize(ev){
+    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    let ok = false;
+    try{ ok = await ensureApi(); }catch(_){}
+    try{
+      if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.minimize_window === 'function'){
+        await window.pywebview.api.minimize_window();
+        return;
+      }
+      if(window.pywebview && window.pywebview.window && typeof window.pywebview.window.minimize === 'function'){
+        window.pywebview.window.minimize();
+        return;
+      }
+    }catch(err){
+      console.error('minimize error:',err);
+    }
+    if(window.close){ window.close(); }
+  }
+  async function tryClose(ev){
+    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    let ok = false;
+    try{ ok = await ensureApi(); }catch(_){}
+    try{
+      if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.close_window === 'function'){
+        await window.pywebview.api.close_window();
+        return;
+      }
+      if(window.pywebview && window.pywebview.window && typeof window.pywebview.window.close === 'function'){
+        window.pywebview.window.close();
+        return;
+      }
+    }catch(err){
+      console.error('close error:',err);
+    }
+    if(window.close){ window.close(); }
+  }
+  function appendLog(msg) {
+    const ts = new Date().toLocaleTimeString();
+    stateLogList.push(`[${ts}] ${msg}`);
+    if(stateLogList.length > 40) stateLogList = stateLogList.slice(-40);
+    stateLog.innerHTML = stateLogList.map(x=>x.replace(/</g,"<")).join('<br>');
+  }
+  async function fetchAndLogState() {
+    const ok = await ensureApi();
+    if(ok && window.pywebview && window.pywebview.api){
+      try {
+        if(window.pywebview.api.fetchSessionState){
+          const st = await window.pywebview.api.fetchSessionState();
+          appendLog("State: " + st);
+        }
+        if(window.pywebview.api.get_status){
+          const txt = await window.pywebview.api.get_status();
+          if(typeof txt === "string") setStatus(txt);
+        }
+      } catch(e) {
+        appendLog("State取得失敗: " + (e && e.message || e));
+      }
+    } else {
+      appendLog("State取得不可(API未接続)");
+    }
+  }
+  function setStatus(m){ statusEl.textContent = m || ''; }
+  async function ensureApi(timeout = 3000){
+    if(window.pywebview && window.pywebview.api) return true;
+    return new Promise(resolve => {
+      let done = false;
+      function onReady(){ if(done) return; done = true; resolve(true); }
+      window.addEventListener('pywebviewready', onReady, {once:true});
+      setTimeout(()=>{ if(!done) resolve(false); }, timeout);
+    });
+  }
+async function loadAgents(){
+  let list = [];
+  try{
+    const res = await fetch('https://valorant-api.com/v1/agents?isPlayableCharacter=true');
+    if(res.ok){ const j = await res.json(); list = j.data.filter(a=>a.isPlayableCharacter); }
+  }catch(e){}
+  if(!list.length) list = [{uuid:'',displayName:'Jett'},{uuid:'',displayName:'Reyna'},{uuid:'',displayName:'Raze'}];
+  agents = list;
+  renderAgentDropdown();
+}
+function renderAgentDropdown(){
+  const wrap = document.getElementById('agent-dropdown');
+  wrap.innerHTML = '';
+  const sel = document.createElement('div'); sel.className='dropdown-selected'; sel.textContent = agents[selectedAgentIdx]?.displayName || '';
+  sel.onclick = (e)=>{ e.stopPropagation(); toggleList('agent'); };
+  wrap.appendChild(sel);
+  const list = document.createElement('div'); list.className='dropdown-list';
+  agents.forEach((a,i)=>{
+    const it = document.createElement('div'); it.className='option'+(i===selectedAgentIdx?' selected':''); it.textContent = a.displayName;
+    it.onclick = (e)=>{ selectAgent(i); closeList('agent'); };
+    list.appendChild(it);
+  });
+  wrap.appendChild(list);
+}
+function toggleList(type){
+  const wrap = document.getElementById(type+'-dropdown');
+  const list = wrap.querySelector('.dropdown-list');
+  const open = list.style.display === 'block';
+  document.querySelectorAll('.dropdown-list').forEach(el=>el.style.display='none');
+  if(!open){ list.style.display = 'block'; setTimeout(()=>{ document.addEventListener('click', function cb(e){ if(!wrap.contains(e.target)){ closeList(type); document.removeEventListener('click', cb); } }, {once:true}); }, 0); }
+}
+function closeList(type){ const wrap = document.getElementById(type+'-dropdown'); const list = wrap.querySelector('.dropdown-list'); if(list) list.style.display = 'none'; }
+async function selectAgent(i){
+  selectedAgentIdx = i;
+  renderAgentDropdown();
+  const ag = agents[selectedAgentIdx] || {};
+  const uuid = ag.uuid || ag.displayName || '';
+  const ok = await ensureApi();
+  if(ok && window.pywebview && window.pywebview.api && window.pywebview.api.set_last_agent){
+    try{ await window.pywebview.api.set_last_agent(uuid); }catch(e){}
+  }
+}
+startBtn.addEventListener('click', async ()=>{
+  await fetchAndLogState();
+  const ok = await ensureApi();
+  if(!ok){ setStatus('API未接続'); return; }
+  const rc = '';
+  const ag = agents[selectedAgentIdx] || {};
+  const agent = ag.uuid || ag.displayName || '';
+  if(!agent){ setStatus('エージェント未選択'); return; }
+  if(!isRunning){
+    await window.pywebview.api.set_last_agent(agent);
+    const resp = await window.pywebview.api.start(rc, agent);
+    setStatus(await window.pywebview.api.get_status());
+    startBtn.textContent = 'Stop';
+    isRunning = true;
+    if(stateIntervalId) clearInterval(stateIntervalId);
+    stateIntervalId = setInterval(fetchAndLogState, 1000);
+  } else {
+    const resp = await window.pywebview.api.stop();
+    setStatus(await window.pywebview.api.get_status());
+    startBtn.textContent = 'Start';
+    isRunning = false;
+    if(stateIntervalId) clearInterval(stateIntervalId);
+    stateIntervalId = null;
+  }
+});
+dodgeBtn.addEventListener('click', async ()=>{
+  await fetchAndLogState();
+  const ok = await ensureApi();
+  if(!ok){ setStatus('API未接続'); return; }
+  const resp = await window.pywebview.api.dodge();
+  setStatus(await window.pywebview.api.get_status());
+});
+playerBtn.addEventListener('click', async ()=>{
+  await fetchAndLogState();
+  const ok = await ensureApi();
+  if(!ok){ setStatus('API未接続'); return; }
+  const players = await window.pywebview.api.get_all_players_rank();
+  if(!players || !players.length){ setStatus('プレイヤーが見つかりません'); return; }
+  await showPlayersModal(players);
+});
+async function showPlayersModal(players){
+  modal.innerHTML = '';
+  modal.style.display = 'flex';
+  try{
+    const ok = await ensureApi();
+    if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.resize_window === 'function'){
+      await window.pywebview.api.resize_window(EXPAND_WIDTH, ORIGINAL_HEIGHT);
+    }
+  }catch(e){}
+  const card = document.createElement('div'); card.className = 'modal-card';
+  const title = document.createElement('h2'); title.textContent = 'All Player info'; title.style.marginBottom = '8px';
+  card.appendChild(title);
+  const header = document.createElement('div'); header.className='player-row';
+  const headerInfo = document.createElement('div'); headerInfo.className='player-info';
+  headerInfo.innerHTML = `<div class="col-head">Side / Agent</div><div class="col-head">Name</div><div class="col-head">Rank (RR)</div><div class="col-head">Peak</div><div class="col-head">WR (TG)</div><div class="col-head">KD</div><div class="col-head">HS%</div>`;
+  header.appendChild(headerInfo);
+  card.appendChild(header);
+  players.forEach(p=>{
+    const row = document.createElement('div'); row.className = 'player-row';
+    const info = document.createElement('div'); info.className = 'player-info';
+    const sideAgent = `${p.side || 'Unknown'} ${p.agent || 'Unknown'}`;
+    const name = p.name || p.subject || 'Unknown';
+    const rank_rr = `${p.rank || 'N/a'}(${p.rr || 0})`;
+    const peak = p.peakrank || 'N/a';
+    const wr = (p.wr !== undefined && p.totalGames !== undefined) ? `${p.wr}(${p.totalGames})` : (p.wr || 'N/a');
+    const kd = p.kd !== undefined ? p.kd : 'N/a';
+    const hs = p.hs !== undefined ? p.hs : 'N/a';
+    info.innerHTML = `<div class="badge">${sideAgent}</div><div style="font-weight:600">${name}</div><div>${rank_rr}</div><div>${peak}</div><div>${wr}</div><div>${kd}</div><div>${hs}</div>`;
+    const copy = document.createElement('button'); copy.className = 'copy-btn'; copy.textContent = 'Copy';
+    copy.onclick = ()=>{ navigator.clipboard.writeText((p.name||p.subject)||''); setStatus('Copied'); };
+    row.appendChild(info); row.appendChild(copy);
+    card.appendChild(row);
+  });
+  const close = document.createElement('button'); close.className = 'close-btn'; close.textContent = 'Close';
+  close.onclick = async ()=>{ try{ const ok = await ensureApi(); if(ok && window.pywebview && window.pywebview.api && typeof window.pywebview.api.resize_window === 'function'){ await window.pywebview.api.resize_window(ORIGINAL_WIDTH, ORIGINAL_HEIGHT); } }catch(e){}; modal.style.display = 'none'; modal.innerHTML = ''; setStatus(''); };
+  card.appendChild(close);
+  modal.appendChild(card);
+}
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await loadAgents();
+  let ok = await ensureApi();
+  if(ok && window.pywebview && window.pywebview.api && window.pywebview.api.connect_auto_region){
+    try {
+      const result = await window.pywebview.api.connect_auto_region();
+      appendLog("自動接続: " + result);
+    } catch(e) {
+      appendLog("自動接続失敗: " + (e && e.message || e));
+    }
+  } else {
+    appendLog("自動接続APIが利用できません");
+  }
+  ok = await ensureApi();
+  if(ok && window.pywebview && window.pywebview.api && window.pywebview.api.get_last_agent){
+    try{
+      const saved = await window.pywebview.api.get_last_agent();
+      if(saved){
+        const idx = agents.findIndex(a => (a.uuid === saved) || ((a.displayName||'').toLowerCase() === (saved||'').toLowerCase()));
+        if(idx >= 0) selectedAgentIdx = idx;
+      }
+    }catch(e){}
+  }
+  renderAgentDropdown();
+  document.getElementById('closeBtnFixed')?.addEventListener('click', tryClose);
+  document.getElementById('minimizeBtnFixed')?.addEventListener('click', tryMinimize);
+});
+window.addEventListener('pywebviewready', async ()=>{ if(!agents.length) await loadAgents(); });
+</script>
+</body>
+</html>
