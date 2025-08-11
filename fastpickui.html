@@ -13,8 +13,6 @@
   --acc2:#ec5f5f;
   --card-bg:#0f1724;
   --row-border:rgba(255,255,255,0.06);
-  --attacker:#ff4b5c;
-  --defender:#4ba3ff;
   --attacker-bg:linear-gradient(90deg, rgba(255,75,92,0.08), rgba(255,75,92,0.03));
   --defender-bg:linear-gradient(90deg, rgba(75,163,255,0.08), rgba(75,163,255,0.03));
   --copy-success:#22c55e;
@@ -24,24 +22,24 @@
 html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color:var(--txt);background:var(--bg)}
 .pywebview-drag-region{ -webkit-app-region: drag; }
 .nodrag{ -webkit-app-region: no-drag !important; }
-.container{position:relative;z-index:1;width:92vw;max-width:980px;margin:0 auto;padding:12px 18px 28px 18px;display:flex;flex-direction:column;gap:12px;min-height:100vh}
+.container{position:relative;z-index:1;width:92vw;max-width:980px;margin:12px auto;padding:12px 18px 18px 18px;display:flex;flex-direction:column;gap:12px;align-items:stretch;max-height:520px}
 .title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 4px}
 .brand{font-weight:800;font-size:20px;letter-spacing:1px;display:flex;align-items:center;gap:10px}
-.tabbar{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.tabbar{display:flex;gap:8px;justify-content:center;margin-top:6px}
 .tab{padding:8px 14px;border-radius:10px;background:transparent;border:1px solid transparent;color:var(--txt);cursor:pointer;font-weight:700}
 .tab.active{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06)}
 .window-controls{display:flex;gap:8px;align-items:center}
 .win-btn{width:36px;height:36px;border-radius:8px;border:none;background:transparent;color:var(--txt);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .win-btn:hover{background:rgba(255,255,255,0.03)}
-.card{background:var(--card-bg);border-radius:12px;padding:14px;border:1px solid var(--muted);display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card-bg);border-radius:12px;padding:12px;border:1px solid var(--muted);display:flex;flex-direction:column;gap:10px}
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.select-wrap{position:relative;background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;min-width:160px}
+.select-wrap{position:relative;background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;min-width:160px;max-width:320px}
 .select-wrap::after{content:"▼";position:absolute;right:12px;top:50%;transform:translateY(-50%)}
 .dropdown-selected{cursor:pointer;user-select:none}
 .dropdown-list{position:absolute;top:100%;left:0;right:0;background:#10203a;border-radius:8px;max-height:220px;overflow:auto;display:none;z-index:20;padding:6px}
 .option{padding:8px 10px;cursor:pointer;border-radius:6px}
 .option:hover{background:linear-gradient(90deg,var(--acc1),var(--acc2));color:#fff}
-.btn{padding:10px 14px;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff;display:inline-flex;align-items:center;gap:8px}
+.btn{padding:9px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff;display:inline-flex;align-items:center;gap:8px}
 .btn.secondary{background:#4caf50}
 .btn.ghost{background:transparent;border:1px solid var(--muted);color:var(--txt)}
 .status{ text-align:center;color:var(--sub);font-size:14px }
@@ -61,13 +59,13 @@ html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color
 .small{font-size:12px;color:var(--sub)}
 .connect-overlay{position:fixed;inset:0;background:rgba(6,12,20,0.85);display:flex;align-items:center;justify-content:center;z-index:70;flex-direction:column;gap:10px;padding:24px;box-sizing:border-box}
 .connect-overlay.hidden{display:none}
-.loader{width:56px;height:56px;border-radius:50%;border:6px solid rgba(255,255,255,0.08);border-top-color:#66b3ff;animation:spin 1s linear infinite}
+.loader{width:48px;height:48px;border-radius:50%;border:6px solid rgba(255,255,255,0.06);border-top-color:#66b3ff;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .connect-text{color:#e6eef8;font-size:16px;text-align:center}
 .connect-sub{color:#bfcde3;font-size:13px;text-align:center;opacity:0.95}
 .connect-restart{color:#d1dbe8;font-size:13px;text-align:center;opacity:0.9;margin-top:6px}
 .footer-note{font-size:13px;color:var(--sub);text-align:center}
-@media (max-width:920px){.players-table{min-width:760px}}
+@media (max-width:520px){.container{padding:10px}.select-wrap{min-width:140px}}
 </style>
 </head>
 <body>
@@ -115,6 +113,7 @@ html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color
     </div>
     <div class="small" id="info-help">プレイヤー情報の取得には時間がかかります。取得中は「取得中...」になります。</div>
     <div style="margin-top:8px">
+      <div style="font-weight:700;margin-bottom:6px">ログ</div>
       <div class="state-log" id="info-state-log" aria-live="polite"></div>
     </div>
   </div>
@@ -151,7 +150,7 @@ let selectedAgentIdx=0
 let isRunning=false
 let stateIntervalId=null
 const ORIGINAL_WIDTH=420
-const ORIGINAL_HEIGHT=640
+const ORIGINAL_HEIGHT=480
 let connectionStatus='connecting'
 
 function setStatus(m){statusEl.textContent=m||''}
@@ -160,11 +159,13 @@ function appendLog(msg){
   const line=document.createElement('div')
   line.textContent=`[${ts}] ${msg}`
   stateLogEl.appendChild(line)
-  infoStateLogEl.appendChild(line.cloneNode(true))
+  if(infoStateLogEl) infoStateLogEl.appendChild(line.cloneNode(true))
   while(stateLogEl.children.length>200) stateLogEl.removeChild(stateLogEl.firstChild)
-  while(infoStateLogEl.children.length>200) infoStateLogEl.removeChild(infoStateLogEl.firstChild)
+  if(infoStateLogEl){
+    while(infoStateLogEl.children.length>200) infoStateLogEl.removeChild(infoStateLogEl.firstChild)
+    infoStateLogEl.scrollTop = infoStateLogEl.scrollHeight
+  }
   stateLogEl.scrollTop = stateLogEl.scrollHeight
-  infoStateLogEl.scrollTop = infoStateLogEl.scrollHeight
 }
 
 async function ensureApi(timeout=3000){
@@ -335,7 +336,7 @@ async function showPlayersModal(players){
   document.getElementById('modal-card').appendChild(card)
   const totalWidth = 160+320+80+70+70+70+70+70+70 + 140
   const newWidth = Math.min(Math.max(totalWidth, ORIGINAL_WIDTH), 1400)
-  try{ const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) await window.pywebview.api.resize_window(newWidth, Math.min(ORIGINAL_HEIGHT, Math.max(480, ORIGINAL_HEIGHT))) }catch(e){}
+  try{ const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) await window.pywebview.api.resize_window(newWidth, Math.min(ORIGINAL_HEIGHT+40, Math.max(480, ORIGINAL_HEIGHT))) }catch(e){}
 }
 
 function setConnectionStatus(status){
@@ -374,7 +375,8 @@ async function startupConnectLoop(){
         setStatus('成功')
         connectTextEl.textContent='成功'
         setConnectionStatus('connected')
-        await new Promise(r=>setTimeout(r,800))
+        try{ const ready=await ensureApi(); if(ready&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window){ await window.pywebview.api.resize_window(ORIGINAL_WIDTH,ORIGINAL_HEIGHT) } }catch(e){}
+        await new Promise(r=>setTimeout(r,500))
         ok=true
         break
       } else {
