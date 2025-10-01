@@ -8,9 +8,7 @@ import time
 import threading
 import tempfile
 import webview
-import urllib.request
 import pathlib
-import hashlib
 from valclient.client import Client
 from valclient.exceptions import PhaseError
 
@@ -463,157 +461,26 @@ class API:
             result.append(out)
         return result
 
-def calc_file_hash(path):
-    try:
-        with open(path, "rb") as f:
-            return hashlib.sha256(f.read()).hexdigest()
-    except Exception:
-        return None
-
-def fetch_url_hash_and_data(url):
-    try:
-        with urllib.request.urlopen(url, timeout=15) as resp:
-            if resp.status != 200:
-                return None, None
-            data = resp.read()
-            return hashlib.sha256(data).hexdigest(), data
-    except Exception as e:
-        print("DEBUG: url fetch/hash failed", e)
-        return None, None
-
-def update_fastpickui_if_needed(local_path, url):
-    local_hash = calc_file_hash(local_path) if os.path.exists(local_path) else None
-    remote_hash, remote_data = fetch_url_hash_and_data(url)
-    if remote_data is None:
-        return False
-    if local_hash != remote_hash:
-        try:
-            if os.path.exists(local_path):
-                os.remove(local_path)
-        except Exception as e:
-            print("DEBUG: remove old fastpickui.html failed", e)
-        try:
-            with open(local_path, "wb") as f:
-                f.write(remote_data)
-            print("DEBUG: fastpickui.html downloaded/updated.")
-            return True
-        except Exception as e:
-            print("DEBUG: save fastpickui.html failed:", e)
-            return False
-    return False
-
 def main():
-    RAW_URL = "https://raw.githubusercontent.com/060001/tekitou1/refs/heads/main/fastpickui.html"
-    temp_html_path = os.path.join(TEMP_DIR, "fastpickui.html")
-    update_fastpickui_if_needed(temp_html_path, RAW_URL)
-    def download_ui(url, dst, timeout=10):
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=timeout) as resp, open(dst, "wb") as f:
-                if resp.status != 200:
-                    raise Exception(f"HTTP {resp.status}")
-                f.write(resp.read())
-            try:
-                with open(dst, "r", encoding="utf-8", errors="ignore") as rf:
-                    head = rf.read(512).lower()
-                    if "<html" not in head and "<!doctype" not in head:
-                        pass
-            except Exception:
-                pass
-            return True
-        except Exception as e:
-            print("DEBUG: download failed:", e)
-            return False
-    if os.path.exists(temp_html_path):
-        ok = True
-        skipped_download = True
-    else:
-        skipped_download = False
-        ok = download_ui(RAW_URL, temp_html_path)
-        if not ok:
-            alt_urls = [
-                "https://raw.githubusercontent.com/060001/tekitou1/refs/heads/main/fastpickui.html",
-                "https://raw.githubusercontent.com/060001/tekitou1/main/fastpickui.html",
-                "https://raw.githubusercontent.com/060001/tekitou1/master/fastpickui.html",
-            ]
-            tried = set([RAW_URL])
-            for alt in alt_urls:
-                if alt in tried:
-                    continue
-                tried.add(alt)
-                if download_ui(alt, temp_html_path):
-                    ok = True
-                    break
-    if os.path.exists(temp_html_path):
-        target_uri = pathlib.Path(temp_html_path).resolve().as_uri()
-    else:
-        local_index = resource_path("index.html")
+    appdata_path = os.getenv("APPDATA")
+    if not appdata_path:
+        input("APPDATA not found. Press Enter to exit.")
+        return
+    
+    fastpicker_dir = os.path.join(appdata_path, "Fastpicker")
+    start_path = os.path.join(fastpicker_dir, "fastpickui.html")
+
+    if not os.path.exists(start_path):
+        local_index = resource_path("fastpickui.html")
         if os.path.exists(local_index):
-            try:
-                with open(local_index, "rb") as rf, open(temp_html_path, "wb") as wf:
-                    wf.write(rf.read())
-                target_uri = pathlib.Path(temp_html_path).resolve().as_uri()
-            except Exception as e:
-                target_uri = pathlib.Path(local_index).resolve().as_uri()
+            start_path = local_index
         else:
-            input("続行するには何かキーを押してください...")
+            input("fastpickui.html not found. Press Enter to exit.")
             return
+
     api = API()
     api.get_agents()
-    serve_root = pathlib.Path(TEMP_DIR).resolve()
-    start_file = "fastpickui.html"
-    start_path = serve_root / start_file
-    if not start_path.exists():
-        local_index = resource_path("index.html")
-        if os.path.exists(local_index):
-            try:
-                with open(local_index, "rb") as rf, open(start_path, "wb") as wf:
-                    wf.write(rf.read())
-            except Exception:
-                pass
-    try:
-        with open(start_path, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-        modified = False
-        new_lines = []
-        for idx, line in enumerate(lines):
-            new_lines.append(line)
-            if 'appendLog("自動接続:' in line and "setStatus(" not in line:
-                new_lines.append("        setStatus(result);\n")
-                modified = True
-            if "DOMContentLoaded" in line and "loadAgents" in line and "// AUTO-RETRY-PATCH" not in "".join(lines[idx:idx+5]):
-                inject_code = """
-document.addEventListener('DOMContentLoaded', ()=>{
-  try{ const sb=document.getElementById('startBtn'); if(sb) sb.disabled=true; }catch(e){}
-  async function retryConnectLoop(){
-    appendLog("再接続試行中");
-    const ok = await ensureApi();
-    if(!ok){ setTimeout(retryConnectLoop,1000); return; }
-    try{
-      const res = await window.pywebview.api.connect_auto_region();
-      appendLog("再接続: "+res);
-      setStatus(res);
-      if(typeof res==='string' && res.includes("Connected")){
-        try{ const sb=document.getElementById('startBtn'); if(sb) sb.disabled=false; }catch(e){}
-        return;
-      }
-    }catch(e){}
-    setTimeout(retryConnectLoop,1000);
-  }
-  retryConnectLoop();
-});
-"""
-                new_lines.append(inject_code)
-                modified = True
-        if modified:
-            with open(start_path, "w", encoding="utf-8") as f:
-                f.writelines(new_lines)
-    except Exception:
-        pass
-    try:
-        os.chdir(str(serve_root))
-    except Exception:
-        pass
+
     try:
         window = webview.create_window(
             "Valorant Picker",
