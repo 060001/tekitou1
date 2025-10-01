@@ -41,15 +41,12 @@ def main():
     REMOTE_APP_URL = "https://github.com/060001/tekitou1/blob/main/app.exe"
     REMOTE_UPDATE_URL = "https://github.com/060001/tekitou1/blob/main/update.txt"
     REMOTE_HTML_URL = "https://github.com/060001/tekitou1/blob/main/fastpickui.html"
-
-    # 初回インストール
     if not os.path.exists(APP_EXE_PATH) or not os.path.exists(UPDATE_TXT_PATH) or not os.path.exists(HTML_PATH):
         print("First time setup, downloading all files...")
         download_file(REMOTE_UPDATE_URL, UPDATE_TXT_PATH)
         download_file(REMOTE_APP_URL, APP_EXE_PATH)
         download_file(REMOTE_HTML_URL, HTML_PATH)
     else:
-        # update.txt チェック
         print("Checking for updates...")
         local_update = read_file(UPDATE_TXT_PATH)
         remote_update = read_remote(REMOTE_UPDATE_URL)
@@ -58,7 +55,6 @@ def main():
             download_file(REMOTE_UPDATE_URL, UPDATE_TXT_PATH)
             download_file(REMOTE_APP_URL, APP_EXE_PATH)
 
-        # fastpickui.html チェック
         local_html = read_file(HTML_PATH)
         remote_html = read_remote(REMOTE_HTML_URL)
         if local_html and remote_html and local_html != remote_html:
