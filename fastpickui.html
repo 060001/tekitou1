@@ -374,7 +374,7 @@ async function startupConnectLoop(){
       if(!apiReady){ await new Promise(r=>setTimeout(r,1000)); continue }
       const res = await window.pywebview.api.connect_auto_region()
       setStatus(res)
-      appendLog('自動接続: ' + res)
+      appendLog('自動あ接続: ' + res)
       if(typeof res==='string' && res.includes('Connected')){
         setStatus('成功')
         connectTextEl.textContent='成功'
