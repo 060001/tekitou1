@@ -5,10 +5,12 @@
 # それぞれのファイルの中身
 ## [app.exe](https://github.com/060001/tekitou1/blob/main/app.exe)
 - [app.py](https://github.com/060001/tekitou1/blob/main/app.py)のexeバージョン
+- [start.exe](https://github.com/060001/tekitou1/blob/main/start.exe)または[start.py](https://github.com/060001/tekitou1/blob/main/start.py)で自動インストールされるためインストール不要
 
 ## [app.py](https://github.com/060001/tekitou1/blob/main/app.py)
-- FastPickerアプリ本体
-- 
+- FastPickerアプリ本体。[app.exe](https://github.com/060001/tekitou1/blob/main/app.exe)の中身です。
+実際には.pyは使わないのでインストール不要。ウイルスとか仕込んでないのをご自身で確認させるためのやつです
+
 ## [start.exe](https://github.com/060001/tekitou1/blob/main/start.exe)
 - [start.py](https://github.com/060001/tekitou1/blob/main/start.py)のexeバージョン
 - これさえあれば起動可能
