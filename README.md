@@ -25,3 +25,14 @@
 ## [update.txt](https://github.com/060001/tekitou1/blob/main/update.txt)
 - アップデートバージョン。アップデートの必要性確認のために必要。
 これも自動インストールされるためダウンロード不要
+---
+
+# 使い方
+1. [start.exe](https://github.com/060001/tekitou1/blob/main/start.exe)または[start.py](https://github.com/060001/tekitou1/blob/main/start.py)をインストール
+2. 起動
+3. エージェントを選択し、マッチをスタート
+
+# ドッジ方法
+エージェント選択画面でDodgeを押せばドッジ可能
+### 注意
+いつも通りペナルティーなどは食らいます
