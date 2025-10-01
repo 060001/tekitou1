@@ -82,12 +82,10 @@ html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color
       </button>
     </div>
   </div>
-
   <div class="tabbar" id="top-tabbar" role="tablist" aria-label="Main tabs">
     <button id="tab-picker" class="tab active" role="tab" aria-selected="true">picker</button>
     <button id="tab-info" class="tab" role="tab" aria-selected="false">info</button>
   </div>
-
   <div id="picker-view" class="card">
     <div class="controls">
       <div style="display:flex;flex-direction:column;gap:8px;min-width:220px">
@@ -103,7 +101,6 @@ html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color
     <div class="state-log" id="state-log" aria-live="polite"></div>
     <div class="footer-note" id="footer-note">valorantを起動してない場合は起動してください。</div>
   </div>
-
   <div id="info-view" class="card" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div style="font-weight:800">All Player info</div>
@@ -117,19 +114,16 @@ html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,Arial;color
       <div class="state-log" id="info-state-log" aria-live="polite"></div>
     </div>
   </div>
-
   <div id="modal" class="modal">
     <div class="modal-card" id="modal-card"></div>
   </div>
 </div>
-
 <div id="connect-overlay" class="connect-overlay">
   <div class="loader"></div>
   <div class="connect-text" id="connect-text">valorantに接続しています</div>
   <div class="connect-sub" id="connect-sub">valorantを起動してない場合は起動してください。</div>
   <div class="connect-restart" id="connect-restart">valorantを起動してるのに接続されない場合はvalorantを再起動してください</div>
 </div>
-
 <script>
 const statusEl=document.getElementById('status')
 const startBtn=document.getElementById('startBtn')
@@ -152,7 +146,6 @@ let stateIntervalId=null
 const ORIGINAL_WIDTH=420
 const ORIGINAL_HEIGHT=480
 let connectionStatus='connecting'
-
 function setStatus(m){statusEl.textContent=m||''}
 function appendLog(msg){
   const ts=new Date().toLocaleTimeString()
@@ -167,7 +160,6 @@ function appendLog(msg){
   }
   stateLogEl.scrollTop = stateLogEl.scrollHeight
 }
-
 async function ensureApi(timeout=3000){
   if(window.pywebview&&window.pywebview.api) return true
   return new Promise(resolve=>{
@@ -225,7 +217,6 @@ function renderAgentDropdown(){
 function toggleList(type){const wrap=document.getElementById(type+'-dropdown'); const list=wrap.querySelector('.dropdown-list'); const open=list.style.display==='block'; document.querySelectorAll('.dropdown-list').forEach(el=>el.style.display='none'); if(!open){list.style.display='block'; setTimeout(()=>{document.addEventListener('click', function cb(e){ if(!wrap.contains(e.target)){ closeList(type); document.removeEventListener('click', cb) } }, {once:true})},0)}}
 function closeList(type){const wrap=document.getElementById(type+'-dropdown'); const list=wrap.querySelector('.dropdown-list'); if(list) list.style.display='none'}
 async function selectAgent(i){selectedAgentIdx=i; renderAgentDropdown(); const ag=agents[selectedAgentIdx]||{}; const uuid=ag.uuid||ag.displayName||''; const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.set_last_agent){try{await window.pywebview.api.set_last_agent(uuid)}catch(e){} } }
-
 startBtn.addEventListener('click', async ()=>{
   const ok=await ensureApi(); if(!ok){ setStatus('API未接続'); appendLog('API未接続'); return }
   const ag=agents[selectedAgentIdx]||{}; const agent=ag.uuid||ag.displayName||''
@@ -234,7 +225,6 @@ startBtn.addEventListener('click', async ()=>{
   else{ await window.pywebview.api.stop(); setStatus(await window.pywebview.api.get_status()); appendLog('Stop 実行'); startBtn.textContent='Start'; isRunning=false; if(stateIntervalId) clearInterval(stateIntervalId); stateIntervalId=null }
 })
 dodgeBtn.addEventListener('click', async ()=>{ const ok=await ensureApi(); if(!ok){ setStatus('API未接続'); appendLog('API未接続'); return } appendLog('Dodge 実行'); await window.pywebview.api.dodge(); setStatus(await window.pywebview.api.get_status()) })
-
 playerBtn.addEventListener('click', async ()=>{
   appendLog('プレイヤー情報取得開始')
   setStatus('取得中...')
@@ -256,7 +246,6 @@ playerBtn.addEventListener('click', async ()=>{
     appendLog('取得失敗: ' + (err && err.message || String(err)))
   }
 })
-
 function createCopyButton(textToCopy){
   const btn=document.createElement('button')
   btn.className='copy-btn nodrag'
@@ -318,7 +307,10 @@ async function showSection(title, side, items){
   return container
 }
 async function showPlayersModal(players){
-  modal.style.display='flex'
+  const modalElem=document.getElementById('modal')
+  const modalCard=document.getElementById('modal-card')
+  if (!modalElem || !modalCard) return;
+  modalElem.style.display='flex'
   const card=document.createElement('div'); card.className='modal-card'
   const title=document.createElement('div'); title.style.fontWeight='800'; title.style.marginBottom='12px'; title.textContent='All Player info'; card.appendChild(title)
   const defenders = players.filter(p=>p.side==='Defender')
@@ -329,16 +321,28 @@ async function showPlayersModal(players){
   card.appendChild(secAtk)
   const close=document.createElement('button'); close.className='copy-btn nodrag'; close.textContent='Close'
   close.onclick=async ()=>{
-    try{ const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) await window.pywebview.api.resize_window(ORIGINAL_WIDTH,ORIGINAL_HEIGHT) }catch(e){}
-    modal.style.display='none'; modal.innerHTML=''; setStatus('') }
+    try{ 
+      const ok=await ensureApi(); 
+      if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) 
+        await window.pywebview.api.resize_window(ORIGINAL_WIDTH,ORIGINAL_HEIGHT) 
+    }catch(e){}
+    if(modalElem) modalElem.style.display='none';
+    if(modalCard) modalCard.innerHTML='';
+    setStatus('') 
+  }
   card.appendChild(close)
-  document.getElementById('modal-card').innerHTML=''
-  document.getElementById('modal-card').appendChild(card)
+  if(modalCard){
+    modalCard.innerHTML='';
+    modalCard.appendChild(card)
+  }
   const totalWidth = 160+320+80+70+70+70+70+70+70 + 140
   const newWidth = Math.min(Math.max(totalWidth, ORIGINAL_WIDTH), 1400)
-  try{ const ok=await ensureApi(); if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) await window.pywebview.api.resize_window(newWidth, Math.min(ORIGINAL_HEIGHT+40, Math.max(480, ORIGINAL_HEIGHT))) }catch(e){}
+  try{ 
+    const ok=await ensureApi(); 
+    if(ok&&window.pywebview&&window.pywebview.api&&window.pywebview.api.resize_window) 
+      await window.pywebview.api.resize_window(newWidth, Math.min(ORIGINAL_HEIGHT+40, Math.max(480, ORIGINAL_HEIGHT))) 
+  }catch(e){}
 }
-
 function setConnectionStatus(status){
   connectionStatus=status
   if(status==='connecting'){
