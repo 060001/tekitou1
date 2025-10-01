@@ -16,8 +16,8 @@
 - これさえあれば起動可能
 
 ## [start.py](https://github.com/060001/tekitou1/blob/main/start.py)
-- アップデート確認や、[app.exe](https://github.com/060001/tekitou1/blob/main/app.exe)、[fastpickui.html](https://github.com/060001/tekitou1/blob/main/fastpickui.html)を自動ダウンロードして起動するためのもの
 - [start.exe](https://github.com/060001/tekitou1/blob/main/start.exe)のソースコード。exeバージョンが怖い場合こちらを起動すればOK
+- アップデート確認や、[app.exe](https://github.com/060001/tekitou1/blob/main/app.exe)、[fastpickui.html](https://github.com/060001/tekitou1/blob/main/fastpickui.html)を自動ダウンロードして起動するためのもの
 
 ## [fastpickui.html](https://github.com/060001/tekitou1/blob/main/fastpickui.html)
 - アプリのUI本体。[start.py](https://github.com/060001/tekitou1/blob/main/start.py)または、[start.exe](https://github.com/060001/tekitou1/blob/main/start.exe)を起動すれば自動インストールされるためインストール不要
